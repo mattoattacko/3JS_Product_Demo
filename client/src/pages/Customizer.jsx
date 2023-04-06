@@ -11,8 +11,44 @@ import { slideAnimation, fadeAnimation } from '../config/motion';
 import { AIPicker, ColorPicker, CustomButton, FilePicker, Tab } from '../components';
 
 const Customizer = () => {
-
   const snap = useSnapshot(state);//need our state so we know if we are on the homepage or customizer page
+
+  const [file, setFile] = useState(''); //file to upload
+
+  const [prompt, setPrompt] = useState(''); //prompt to display on the file picker
+  const [generatingImg, setGeneratingImg] = useState(false); //show loading spinner when generating image
+  // keep track of the active tab
+  const [activeEditorTab, setActiveEditorTab] = useState('')
+  const [activeFilterTab, setActiveFilterTab] = useState({
+    logoShirt: true,
+    stylishShirt: false,
+  })
+
+  // show tab content depending on active tab
+  // 'switch' looks for activeEditorTab
+  // if the activeEditorTab is ColorPicker, then show the ColorPicker component
+  // displayed on top of other components with absolute 
+  const generateTabContent = () => {
+    // switch (activeEditorTab) {
+    //   case 'ColorPicker':
+    //     return <ColorPicker />
+    //   case 'AIPicker':
+    //     return <AIPicker />
+    //   default:
+    //     return <FilePicker prompt={prompt} />
+    // }
+
+    switch (activeEditorTab) {
+      case 'colorpicker': 
+        return <ColorPicker />
+      case 'aipicker':
+        return <AIPicker />
+      case 'filepicker':
+        return <FilePicker />
+      default:
+        return null;
+    }
+  }
 
   return (
     <AnimatePresence>
@@ -26,14 +62,18 @@ const Customizer = () => {
           >
             <div className='flex items-center min-h-screen'>
               <div className='editortabs-container tabs'>
+
                 {/* Editor Tabs */}
                 {EditorTabs.map((tab) => (
                   <Tab
                     key={tab.name}
                     tab={tab}
-                    handleClick={() => { }}
+                    handleClick={() => setActiveEditorTab(tab.name)}
                   />
                 ))}
+
+                {generateTabContent()} 
+                {/* will show on top once we activate a specific tab */}
               </div>
             </div>
           </motion.div>
