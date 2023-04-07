@@ -18,7 +18,7 @@ const Customizer = () => {
   const [prompt, setPrompt] = useState(''); //prompt to display on the file picker
   const [generatingImg, setGeneratingImg] = useState(false); //show loading spinner when generating image
   // keep track of the active tab
-  const [activeEditorTab, setActiveEditorTab] = useState('')
+  const [activeEditorTab, setActiveEditorTab] = useState('');
   const [activeFilterTab, setActiveFilterTab] = useState({
     logoShirt: true,
     stylishShirt: false,
@@ -39,16 +39,98 @@ const Customizer = () => {
     // }
 
     switch (activeEditorTab) {
-      case 'colorpicker': 
+      case 'colorpicker':
         return <ColorPicker />
       case 'aipicker':
-        return <AIPicker />
+        return <AIPicker 
+          prompt={prompt}
+          setPrompt={setPrompt}
+          generatingImg={generatingImg} //loading state
+          handleSubmit={handleSubmit} //handle file upload
+        />
       case 'filepicker':
-        return <FilePicker />
+        return <FilePicker
+          file={file}
+          setFile={setFile}
+          readFile={readFile}
+        />
       default:
         return null;
     }
   }
+
+  // handle file upload
+  // async function that takes in the type of decal (logo or full texture)
+  const handleSubmit = async (type) => {
+    if(!prompt) return alert('Please enter a prompt');
+
+    try {
+      // call BE to generate image
+      
+    } catch (error) {
+      alert(error);
+    } finally {
+      setGeneratingImg(false);
+      setActiveEditorTab('');
+    }
+  }
+
+  // Handle File Upload //
+  // type can be a logo or full texture
+  const handleDecals = (type, result) => {
+    // first get decal type
+    const decalType = DecalTypes[type];
+
+    //then update the state (state being the index.js file in the store folder)
+    state[decalType.stateProperty] = result;
+
+    // need to figure out if the decal is currently active (either as a logo or texture)
+    if (!activeFilterTab[decalType.filterTab]) {
+      handleActiveFilterTab(decalType.filterTab);
+    }
+  }
+
+  // handle active filter tab
+  // checks are we showing the logo or texture? Both? Neither?
+  const handleActiveFilterTab = (tabName) => {
+    switch (tabName) {
+      // if the case is 'logoShirt', then we add the state that isLogoTexture is not active. Toggle it on/off
+      case 'logoShirt':
+        state.isLogoTexture = !activeFilterTab[tabName];
+        break;
+
+      // if the case is 'stylishShirt', then we add the state that isFullTexture is not activeFilterTab. Toggle it on/off
+      case 'stylishShirt':
+        state.isFullTexture = !activeFilterTab[tabName];
+      default:
+        state.isLogoTexture = true;
+        state.isFullTexture = false;
+    }
+
+    // after setting the state, we need to update the activeFilterTab
+    // since we are working with the previous state, we need to use the callback function containing the previous state
+    // we need to return an object that spreads the previous state, but then it needs to update the tabName to be equal to the previous state of the tabName
+    // then we take the tabName and set it to the opposite of the previous state of the tabName (toggle it on/off)
+    setActiveFilterTab((prevState) => {
+      return {
+        ...prevState,
+        [tabName]: !prevState[tabName]
+      }
+    })
+  }
+
+
+
+  // pass to reader function to get file data
+  // we pass the file to the decals of the shirt depending on the type of image
+  const readFile = (type) => {
+    reader(file)
+      .then((result) => {
+        handleDecals(type, result);
+        setActiveEditorTab(''); //reset active tab
+      })
+  }
+
 
   return (
     <AnimatePresence>
@@ -72,7 +154,7 @@ const Customizer = () => {
                   />
                 ))}
 
-                {generateTabContent()} 
+                {generateTabContent()}
                 {/* will show on top once we activate a specific tab */}
               </div>
             </div>
@@ -100,9 +182,9 @@ const Customizer = () => {
               <Tab
                 key={tab.name}
                 tab={tab}
-                handleClick={() => {}}
                 isFilterTab
-                isActiveTab=''
+                isActiveTab={activeFilterTab[tab.name]}
+                handleClick={() => handleActiveFilterTab(tab.name)}
               />
             ))}
           </motion.div>
