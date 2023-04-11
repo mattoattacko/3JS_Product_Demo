@@ -66,7 +66,24 @@ const Customizer = () => {
 
     try {
       // call BE to generate image
-      
+      setGeneratingImg(true); //start loading
+
+      // we make a post request of type json to localhost:8080/api/v1/dalle, passing over the prompt.
+      // this is calling the server we created (the route 'router.route('/').post(async(req, res) => {.....)) which generates the image from the DALLE API, which returns it as a photo
+      const response = await fetch('http://localhost:8080/api/v1/dalle', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt,
+        })
+      })
+
+      // get the response from the server
+      const data = await response.json();
+
+      handleDecals(type, `data:image/png;base64,${data.photo}`)
     } catch (error) {
       alert(error);
     } finally {
@@ -102,9 +119,11 @@ const Customizer = () => {
       // if the case is 'stylishShirt', then we add the state that isFullTexture is not activeFilterTab. Toggle it on/off
       case 'stylishShirt':
         state.isFullTexture = !activeFilterTab[tabName];
+        break;
       default:
         state.isLogoTexture = true;
         state.isFullTexture = false;
+        break;
     }
 
     // after setting the state, we need to update the activeFilterTab
@@ -118,8 +137,6 @@ const Customizer = () => {
       }
     })
   }
-
-
 
   // pass to reader function to get file data
   // we pass the file to the decals of the shirt depending on the type of image
